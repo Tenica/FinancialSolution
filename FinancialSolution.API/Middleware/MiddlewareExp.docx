@@ -1,0 +1,65 @@
+Teacher's Breakdown: The Global Exception Middleware
+Imagine an API is like a massive factory assembly line. A request comes in, goes through security, goes to the Controller, goes to the Service, hits the Database, and then comes all the way back out.
+
+But what happens if a machine catches fire right in the middle of the factory?
+Normally, the factory would explode, and the user (the frontend) would get a terrifying, ugly HTML error page that says HTTP 500 Internal Server Error with a bunch of sensitive C# stack trace code that hackers love to read.
+
+This code is the Ultimate Safety Net. It is a giant catcher's mitt wrapped around your entire application.
+
+Here is the step-by-step breakdown of how it works.
+
+1. The Setup (The Assembly Line)
+C#
+private readonly RequestDelegate _next;
+
+public GlobalExceptionMiddleware(RequestDelegate next)
+{
+    _next = next;
+}
+Middleware in .NET is a piece of code that sits directly in the HTTP pipeline.
+
+RequestDelegate _next is simply a pointer to the next station in the factory. When this middleware is done checking things, it presses the _next button to pass the request further inside the application.
+
+2. The Interception
+C#
+public async Task InvokeAsync(HttpContext context)
+Every single time a user makes an API request (from logging in, to transferring money), they must pass through this exact method first.
+
+HttpContext context is the box that holds everything about their request (their IP address, their headers, their JSON body) and everything about the response you will send back.
+
+3. The Happy Path (The try block)
+C#
+try
+{
+    await _next(context);
+}
+This is incredibly elegant. The middleware says: "Okay, pass this request deeper into the application (to the Controllers and Services) and let them do their job."
+
+If everything goes perfectly, the application generates a nice HTTP 200 OK response, and it sails right through without this middleware ever doing anything else.
+
+4. The Safety Net (The catch block)
+C#
+catch (Exception ex)
+Because the entire application execution (await _next) was wrapped inside the try block, if ANY code throws an Exception (e.g., "Insufficient funds", "Wallet not found", Database timeout), this catch block instantly catches it before it can crash the server!
+
+5. The Professional Apology
+C#
+context.Response.ContentType = "application/json";
+context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
+Instead of sending an ugly HTML crash page, this middleware takes control of the response.
+
+It explicitly tells the frontend: "I am sending you JSON, and the status is a 400 Bad Request." (A 400 tells the frontend that the user did something wrong, so the frontend knows to show a red error popup).
+
+6. The Clean Delivery
+C#
+var response = new { message = ex.Message };
+
+await context.Response.WriteAsync(JsonSerializer.Serialize(response));
+You create a simple, clean, anonymous C# object containing just the error message (e.g., "message": "Email already exists."). Notice how you are completely hiding the line numbers and stack traces to protect your API from hackers!
+
+Finally, you use JsonSerializer to convert that object into a JSON string, and write it directly to the response stream.
+
+Why is this code so brilliant?
+Before you had this file, if you wanted to handle errors gracefully, you had to write try { } catch { return BadRequest(); } inside every single Controller method in your entire app.
+
+By using this Global Middleware, your Controllers and Services don't need try/catch blocks for business logic anymore! They can just throw new Exception("Error message");, knowing confidently that this Safety Net will catch it and format it beautifully for the frontend.

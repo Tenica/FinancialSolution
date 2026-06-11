@@ -1,0 +1,30 @@
+what is an IDbContext Transaction
+
+In Entity Framework Core, IDbContextTransaction is the physical "Key to the Vault."
+
+Technically speaking, it is a C# interface built specifically by Microsoft (Microsoft.EntityFrameworkCore.Storage) that represents a live, active conversation with your underlying database engine (like SQL Server) telling it to hold off on making any permanent changes until you give the final word.
+
+Here is exactly what it does and why it is so important in enterprise applications.
+
+The Default Behavior (Auto-Commit)
+Normally, when you use Entity Framework and call await _context.SaveChangesAsync(), EF Core creates an invisible, temporary transaction in the background, saves your data, and instantly commits it.
+This is great for simple things (like updating a user's profile picture). But in FinTech, if you need to deduct money from one wallet, calculate a fee, and add money to another wallet, a single SaveChangesAsync() isn't always enough to safely wrap all those complex steps.
+
+Taking Manual Control (IDbContextTransaction)
+When you call await _context.Database.BeginTransactionAsync(), Entity Framework stops auto-committing. Instead, it hands you an IDbContextTransaction object.
+
+By holding this object in your code, you now have manual control over the four critical transaction phases:
+
+The Lock: The moment this object is created, the database locks the relevant tables. Other operations have to wait their turn (Isolation).
+
+CommitAsync(): When you call this method on the object, it sends the signal: "All our C# code executed perfectly. Permanently save the data."
+
+RollbackAsync(): If a try/catch block catches an error, calling this method sends the signal: "Something broke in the C# code. Undo everything we just did in the database."
+
+Dispose(): Because this object holds a live connection to the database, it must be thrown away (disposed) when you are done so it doesn't cause a memory leak. (This is why we used the using keyword or implemented IDisposable earlier).
+
+The Architectural Boundary
+Because IDbContextTransaction is heavily tied to Entity Framework Core, it is considered an Infrastructure Tool.
+
+If you pass this object up to your Application Layer (like your CustomerService or TransactionService), your business logic suddenly becomes permanently glued to Entity Framework. By hiding this object entirely inside your UnitOfWork class, your application gets all the safety of manual transactions without ever knowing what an IDbContextTransaction actually is!
+

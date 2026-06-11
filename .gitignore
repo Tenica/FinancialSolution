@@ -1,0 +1,48 @@
+# Build folders
+
+bin/
+obj/
+
+# Visual Studio
+
+.vs/
+
+# Rider
+
+.idea/
+
+# User-specific files
+
+*.user
+*.suo
+
+# NuGet
+
+*.nupkg
+packages/
+
+# Logs
+
+*.log
+
+# Test Results
+
+TestResults/
+
+# Publish output
+
+publish/
+
+# EF local database files
+
+*.mdf
+*.ldf
+
+# OS files
+
+Thumbs.db
+Desktop.ini
+
+# Secrets
+
+appsettings.Development.json

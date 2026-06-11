@@ -1,0 +1,45 @@
+Yes, this code is absolutely correct! You have a very sharp eye to catch that missing [FromBody] tag.
+
+The fact that this code works perfectly without [FromBody] is due to a piece of modern ASP.NET Core "magic" called Binding Source Parameter Inference.
+
+Here is exactly why you don't need to write it:
+
+The Secret is in the [ApiController] Tag
+At the very top of your class, you have this line:
+
+C#
+[ApiController]
+When you put this attribute on a controller, you are telling the .NET framework to apply a set of modern API rules and conventions to your class. One of those rules is that it automatically guesses where your data is coming from based on the type of variable you ask for.
+
+Here is how the framework's brain works when it sees your Register(RegisterCustomerRequest request) method:
+
+"Is it a complex type?" The framework looks at RegisterCustomerRequest and sees that it is a class (a complex object with multiple properties).
+
+"Where do complex types usually live?" In HTTP requests, massive JSON objects don't fit in the URL; they live in the Body.
+
+The Automatic Assumption: Because of the [ApiController] tag, the framework says, "I am automatically going to assume this comes from the Body. I will apply [FromBody] behind the scenes so the developer doesn't have to type it."
+
+What if it was a simple type?
+If you were asking for a simple string or integer, like an ID, the framework makes a different assumption:
+
+C#
+[HttpGet("{id}")]
+public async Task<IActionResult> GetById(int id) 
+In this case, because int is a "simple type", the [ApiController] magic automatically assumes it comes from the URL route (applying [FromRoute] behind the scenes).
+
+Should you use [FromBody] anyway?
+Omitting it (like you did in your code) is completely fine and is the modern standard. It makes your code look cleaner.
+
+Including it is also perfectly fine. Many senior developers still type [FromBody] explicitly just to make it 100% obvious to anyone reading the code exactly where the data is coming from.
+
+Either way, your code is flawless and ready to process HTTP requests!
+
+
+
+
+
+What it does: You create the C# Customer entity and add it to the repository.
+
+The Trick: Why do you call SaveChangesAsync() here, in the middle of the code? Because you need SQL Server to generate the Customer's primary Id! Without that Id, you can't attach a Wallet to them in the next step.
+
+The Safety: Even though you saved it to the database, it is not permanent yet. Because it is wrapped inside the transaction, it is invisible to the rest of the world until you commit.

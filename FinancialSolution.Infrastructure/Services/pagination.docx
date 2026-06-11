@@ -1,0 +1,63 @@
+Enterprise Data Management: Pagination & LINQ Architecture
+Project: FinancialSolution API
+Module: Transaction History
+
+Part 1: The PagedResult Pattern
+When building enterprise APIs, returning massive datasets (like a user with 10,000 transactions) all at once will crash your server, drain the user's data, and freeze the frontend. The solution is the Paginated Response.
+
+Instead of sending the entire dataset, you send a single "Page" of data wrapped in a custom PagedResult class that contains the exact metadata the frontend needs to render its tables.
+
+The C# Implementation
+C#
+public async Task<PagedResult<TransactionHistoryResponse>> GetTransactionHistoryAsync(
+    Guid customerId, int page, int pageSize)
+{
+    // 1. Fetch exactly one page of data
+    var transactions = await _transactionRepository.GetWalletTransactionsAsync(wallet.Id, page, pageSize);
+
+    // 2. Fetch the total count of all records
+    var totalCount = await _transactionRepository.GetTransactionCountAsync(wallet.Id);
+
+    // 3. Return the packaged response
+    return new PagedResult<TransactionHistoryResponse>
+    {
+        Items = transactions.Select(x => new TransactionHistoryResponse
+        {
+            Amount = x.Amount,
+            TransactionType = x.TransactionType.ToString(),
+            Status = x.Status.ToString(),
+            Reference = x.Reference,
+            CreatedAt = x.CreatedAt
+        }).ToList(),
+        
+        Page = page,
+        PageSize = pageSize,
+        TotalCount = totalCount
+    };
+}
+The JSON Output
+When this hits the frontend (React, Next.js, etc.), the JSON is perfectly structured to build a Data Table component with pagination buttons:
+
+JSON
+{
+  "items": [
+    { "amount": 5000, "type": "Credit", "status": "Success" },
+    { "amount": 1000, "type": "Debit", "status": "Success" }
+  ],
+  "page": 1,
+  "pageSize": 10,
+  "totalCount": 10000
+}
+Part 2: The Core LINQ Toolkit
+To actually fetch that single page of data efficiently, the Infrastructure Layer relies on five core Entity Framework LINQ methods. These methods translate C# directly into highly optimized SQL queries.
+
+CountAsync(): Asks the database exactly how many rows match a rule, without downloading the rows. Prevents server crashes when calculating page numbers.
+
+Skip(x): Tells SQL to completely ignore the first x rows it finds.
+
+Take(y): Tells SQL to grab the next y rows, and then immediately stop searching.
+(Example: To get Page 3 with 10 items per page, use Skip(20).Take(10)).
+
+Select(): Acts as a factory assembly line. It loops through heavy database entities and transforms them into lightweight C# DTOs, stripping away sensitive data.
+
+ToListAsync(): The executioner. Skip, Take, and Select only prepare a query in memory. ToListAsync() actually fires the query to the database, downloads the results, and packages them into a C# List.
