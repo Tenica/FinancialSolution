@@ -17,11 +17,15 @@ public class Customer : BaseEntity
 
     public bool IsBvnVerified { get; set; }
 
+    public DateTime? BvnVerifiedAt { get; set; }
+
     public bool IsActive { get; set; } = true;
 
     public UserRole Role { get; set; }
 
     public string PasswordHash { get; set; } = default!;
+
+
 
     // Navigation Properties
     public Profile? Profile { get; set; }

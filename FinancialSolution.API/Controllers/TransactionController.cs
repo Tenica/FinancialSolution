@@ -19,7 +19,7 @@ public class TransactionController : ControllerBase
         _transactionService = transactionService;
     }
 
-    [Authorize(Roles = "Customer")]
+    [Authorize(Roles = "Customer,Admin")]
     [HttpPost("transfer")]
     public async Task<IActionResult> Transfer(
         TransferRequest request)

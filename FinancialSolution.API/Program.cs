@@ -83,6 +83,8 @@ builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 
 builder.Services.AddScoped<IPasswordResetTokenRepository, PasswordResetTokenRepository>();
 
+builder.Services.AddScoped<IKycService,KycService>();
+
 
 
 

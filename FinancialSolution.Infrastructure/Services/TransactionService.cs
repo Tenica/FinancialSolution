@@ -1,7 +1,8 @@
+using FinancialSolution.Application.DTOs.Common;
 using FinancialSolution.Application.DTOs.Transaction;
 using FinancialSolution.Application.Interfaces.Repositories;
 using FinancialSolution.Application.Interfaces.Services;
-using FinancialSolution.Application.DTOs.Common;
+using FinancialSolution.Infrastructure.Repositories;
 
 
 namespace FinancialSolution.Infrastructure.Services;
@@ -12,21 +13,40 @@ public class TransactionService : ITransactionService
 
     private readonly IWalletRepository _walletRepository;
 
+    private readonly ICustomerRepository _customerRepository;
+
     private readonly IAuditService _auditService;
 
     public TransactionService(
         ITransactionRepository transactionRepository,
         IWalletRepository walletRepository,
+        ICustomerRepository customerRepository,
         IAuditService auditService)
     {
         _transactionRepository = transactionRepository;
         _walletRepository = walletRepository;
+        _customerRepository = customerRepository;
         _auditService = auditService;
     }
 
     public async Task<TransactionResponse> TransferAsync(
-        TransferRequest request, Guid customerId)
+    TransferRequest request,
+    Guid customerId)
     {
+        var customer =
+            await _customerRepository.GetByIdAsync(customerId);
+
+        if (customer == null)
+        {
+            throw new Exception("Customer not found.");
+        }
+
+        if (!customer.IsBvnVerified)
+        {
+            throw new Exception(
+                "Please complete BVN verification before making transfers.");
+        }
+
         var reference =
             Guid.NewGuid().ToString();
 
