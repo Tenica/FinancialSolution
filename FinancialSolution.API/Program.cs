@@ -85,7 +85,7 @@ builder.Services.AddScoped<IPasswordResetTokenRepository, PasswordResetTokenRepo
 
 builder.Services.AddScoped<IKycService,KycService>();
 
-
+builder.Services.AddScoped<IAdminService, AdminService>();
 
 
 
