@@ -1,0 +1,110 @@
+using FinancialSolution.Application.DTOs.Kyc;
+using FinancialSolution.Application.Interfaces.Services;
+using FinancialSolution.Infrastructure.ExternalServices.Dojah.DTOs;
+using FinancialSolution.Infrastructure.Settings;
+using Microsoft.Extensions.Options;
+using System;
+using System.Collections.Generic;
+using System.Net.Http;
+using System.Text;
+using System.Text.Json;
+
+namespace FinancialSolution.Infrastructure.ExternalServices.Dojah
+{
+    public class DojahService : IDojahService
+    {
+
+        private readonly HttpClient _httpClient;
+
+        private readonly DojahSettings _dojahSettings;
+
+        public DojahService(
+    HttpClient httpClient,
+    IOptions<DojahSettings> dojahOptions)
+        {
+            _httpClient = httpClient;
+
+            _dojahSettings = dojahOptions.Value;
+        }
+
+        public async Task<BvnVerificationResult> VerifyBvnAsync(
+     string bvn,
+     string firstName,
+     string lastName)
+        {
+            var requestUrl =
+                $"{_dojahSettings.BaseUrl}/api/v1/kyc/bvn" +
+                $"?bvn={bvn}" +
+                $"&first_name={Uri.EscapeDataString(firstName)}" +
+                $"&last_name={Uri.EscapeDataString(lastName)}";
+
+            using var request =
+                new HttpRequestMessage(
+                    HttpMethod.Get,
+                    requestUrl);
+
+            request.Headers.Add(
+                "AppId",
+                _dojahSettings.AppId);
+
+            request.Headers.Add(
+                "Authorization",
+                _dojahSettings.SecretKey);
+
+            var response =
+                await _httpClient.SendAsync(request);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                return new BvnVerificationResult
+                {
+                    IsVerified = false,
+                    ErrorMessage =
+                        $"Dojah returned status code {(int)response.StatusCode}."
+                };
+            }
+
+            var content =
+                await response.Content.ReadAsStringAsync();
+
+            var dojahResponse =
+                JsonSerializer.Deserialize<DojahBvnResponse>(
+                    content,
+                    new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    });
+
+            if (dojahResponse?.Entity == null)
+            {
+                return new BvnVerificationResult
+                {
+                    IsVerified = false,
+                    ErrorMessage =
+                        "Unable to parse Dojah response."
+                };
+            }
+
+            var isVerified =
+                dojahResponse.Entity.Bvn.Status
+                &&
+                dojahResponse.Entity.FirstName.Status
+                &&
+                dojahResponse.Entity.LastName.Status;
+
+            return new BvnVerificationResult
+            {
+                IsVerified = isVerified,
+
+                FirstName = firstName,
+
+                LastName = lastName,
+
+                ErrorMessage =
+                    isVerified
+                        ? null
+                        : "BVN details do not match."
+            };
+        }
+    }
+}

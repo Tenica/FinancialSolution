@@ -57,6 +57,12 @@ public class AuthenticationService : IAuthenticationService
             throw new Exception("Invalid email or password.");
         }
 
+        if (!customer.IsActive)
+        {
+            throw new Exception(
+                "Your account has been deactivated. Please contact support.");
+        }
+
         var passwordValid =
             BCrypt.Net.BCrypt.Verify(
                 request.Password,
