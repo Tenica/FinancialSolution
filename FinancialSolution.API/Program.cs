@@ -1,19 +1,21 @@
-using Microsoft.EntityFrameworkCore;
+using FinancialSolution.API.Middleware;
 using FinancialSolution.Application.Interfaces.Repositories;
 using FinancialSolution.Application.Interfaces.Services;
 using FinancialSolution.Application.Interfaces.UnitOfWork;
 using FinancialSolution.Application.Services;
-using FinancialSolution.Infrastructure.Services;
+using FinancialSolution.Application.Validators;
+using FinancialSolution.Infrastructure.ExternalServices.Dojah;
 using FinancialSolution.Infrastructure.Persistence;
 using FinancialSolution.Infrastructure.Repositories;
+using FinancialSolution.Infrastructure.Services;
+using FinancialSolution.Infrastructure.Settings;
 using FinancialSolution.Infrastructure.UnitOfWork;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
-using FinancialSolution.API.Middleware;
 using FluentValidation;
 using FluentValidation.AspNetCore;
-using FinancialSolution.Application.Validators;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -48,6 +50,12 @@ builder.Services
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// BVN Verification Service Settings
+builder.Services.Configure<DojahSettings>(
+    builder.Configuration.GetSection("DojahSettings"));
+
+builder.Services.AddHttpClient();
 
 // 2. Dependency Injection
 
@@ -84,6 +92,8 @@ builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 builder.Services.AddScoped<IPasswordResetTokenRepository, PasswordResetTokenRepository>();
 
 builder.Services.AddScoped<IKycService,KycService>();
+
+builder.Services.AddScoped<IDojahService, DojahService>();
 
 builder.Services.AddScoped<IAdminService, AdminService>();
 
