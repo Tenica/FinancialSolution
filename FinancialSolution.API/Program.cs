@@ -1,4 +1,5 @@
 using FinancialSolution.API.Middleware;
+using FinancialSolution.Infrastructure.BackgroundServices;
 using FinancialSolution.Application.Interfaces.Repositories;
 using FinancialSolution.Application.Interfaces.Services;
 using FinancialSolution.Application.Interfaces.UnitOfWork;
@@ -96,6 +97,18 @@ builder.Services.AddScoped<IKycService,KycService>();
 builder.Services.AddScoped<IDojahService, DojahService>();
 
 builder.Services.AddScoped<IAdminService, AdminService>();
+
+builder.Services.AddScoped<IScheduledTransferRepository, ScheduledTransferRepository>();
+
+builder.Services.AddScoped<IScheduledTransferService, ScheduledTransferService>();
+
+builder.Services.AddScoped<IBeneficiaryService, BeneficiaryService>();
+
+builder.Services.AddHostedService<ScheduledTransferProcessor>();
+
+builder.Services.AddScoped<IBeneficiaryRepository,BeneficiaryRepository>();
+
+builder.Services.AddScoped<INotificationService, NotificationService>();
 
 
 
