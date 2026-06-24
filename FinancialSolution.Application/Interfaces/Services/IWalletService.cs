@@ -6,5 +6,5 @@ public interface IWalletService
 {
     Task<WalletResponse?> GetMyWalletAsync(Guid customerId);
 
-    Task FundWalletAsync(FundWalletRequest request);
+    Task FundWalletAsync(Guid adminId, FundWalletRequest request);
 }

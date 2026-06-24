@@ -6,4 +6,3 @@ public enum TransactionType
     Withdrawal = 2,
     Transfer = 3,
 }
-

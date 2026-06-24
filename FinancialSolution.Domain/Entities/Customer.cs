@@ -34,9 +34,18 @@ public class Customer : BaseEntity
 
     public ICollection<DeviceLog> DeviceLogs { get; set; } = new List<DeviceLog>();
 
+    public ICollection<TransactionReversalRequest> ReversalRequests{ get; set; } 
+        = new List<TransactionReversalRequest>();
+
     public ICollection<RefreshToken> RefreshTokens { get; set; }
     = new List<RefreshToken>();
 
+    public ICollection<ScheduledTransfer> ScheduledTransfers { get; set; }
+    = new List<ScheduledTransfer>();
+
     public ICollection<PasswordResetToken> PasswordResetTokens { get; set; }
         = new List<PasswordResetToken>();
+
+    public ICollection<Beneficiary> Beneficiaries
+    { get; set; } = new List<Beneficiary>();
 }

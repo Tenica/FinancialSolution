@@ -28,6 +28,10 @@ public class TransactionController : ControllerBase
             User.FindFirst(
                 ClaimTypes.NameIdentifier)?.Value;
 
+        var checkUser = User.GetType() == typeof(ClaimsPrincipal);
+
+        Console.WriteLine(checkUser);
+
         if (string.IsNullOrWhiteSpace(customerId))
         {
             return Unauthorized();

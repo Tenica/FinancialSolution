@@ -20,5 +20,10 @@ public interface ITransactionService
         int page,
         int pageSize);
 
-
+    Task ExecuteTransferAsync(
+    string senderAccountNumber,
+    string receiverAccountNumber,
+    decimal amount,
+    string reference
+    );
 }

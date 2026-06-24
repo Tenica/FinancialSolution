@@ -17,16 +17,20 @@ public class TransactionService : ITransactionService
 
     private readonly IAuditService _auditService;
 
+    private readonly INotificationService _notificationService;
+
     public TransactionService(
         ITransactionRepository transactionRepository,
         IWalletRepository walletRepository,
         ICustomerRepository customerRepository,
-        IAuditService auditService)
+        IAuditService auditService,
+        INotificationService notificationService)
     {
         _transactionRepository = transactionRepository;
         _walletRepository = walletRepository;
         _customerRepository = customerRepository;
         _auditService = auditService;
+        _notificationService = notificationService;
     }
 
     public async Task<TransactionResponse> TransferAsync(
@@ -34,12 +38,7 @@ public class TransactionService : ITransactionService
     Guid customerId)
     {
         var customer =
-            await _customerRepository.GetByIdAsync(customerId);
-
-        if (customer == null)
-        {
-            throw new Exception("Customer not found.");
-        }
+            await _customerRepository.GetByIdAsync(customerId) ?? throw new Exception("Customer not found.");
 
         if (!customer.IsBvnVerified)
         {
@@ -47,20 +46,35 @@ public class TransactionService : ITransactionService
                 "Please complete BVN verification before making transfers.");
         }
 
+        var wallet = await _walletRepository.GetByCustomerIdAsync(customerId) ?? throw new Exception("Wallet not found.");
+
+        if (wallet.AccountNumber != request.SenderAccountNumber )
+        {
+            throw new Exception("You can only transfer from your own account.");
+        }
+
         var reference =
             Guid.NewGuid().ToString();
+    
 
-        await _transactionRepository.ExecuteTransferAsync(
-            request.SenderAccountNumber,
-            request.ReceiverAccountNumber,
-            request.Amount,
-            reference);
+        await ExecuteTransferAsync(
+     request.SenderAccountNumber,
+     request.ReceiverAccountNumber,
+     request.Amount,
+     reference);
 
         await _auditService.LogAsync(
             customerId,
             "Transfer",
             $"Transferred {request.Amount} to account {request.ReceiverAccountNumber}",
             null);
+
+        await _notificationService
+    .SendTransactionNotificationAsync(
+        customer.Email,
+         request.Amount,
+        "Transfer",
+        reference);
 
         return new TransactionResponse
         {
@@ -177,5 +191,22 @@ public class TransactionService : ITransactionService
                         })
                     .ToList()
         };
+
+    }
+
+    //ask if this should be internal
+    public async Task ExecuteTransferAsync(
+    string senderAccountNumber,
+    string receiverAccountNumber,
+    decimal amount,
+    string reference)
+    {
+
+        await _transactionRepository
+            .ExecuteTransferAsync(
+                senderAccountNumber,
+                receiverAccountNumber,
+                amount,
+                reference);
     }
 }

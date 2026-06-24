@@ -41,7 +41,13 @@ public class WalletController : ControllerBase
     public async Task<IActionResult> FundWallet(
     FundWalletRequest request)
     {
-        await _walletService.FundWalletAsync(request);
+        var adminId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (string.IsNullOrWhiteSpace(adminId)) { 
+            return Unauthorized();
+        }
+
+        await _walletService.FundWalletAsync(Guid.Parse(adminId), request);
 
         return Ok("Wallet funded successfully.");
     }

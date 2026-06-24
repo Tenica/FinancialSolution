@@ -112,7 +112,7 @@ public class CustomerService : ICustomerService
         }
         catch
         {
-            await _unitOfWork.BeginTransactionAsync();
+            await _unitOfWork.RollbackTransactionAsync();
 
             throw;
         }

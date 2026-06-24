@@ -4,6 +4,7 @@ using FinancialSolution.Application.Interfaces.Repositories;
 using FinancialSolution.Application.Interfaces.Services;
 using FinancialSolution.Application.Interfaces.UnitOfWork;
 using FinancialSolution.Domain.Entities;
+using FinancialSolution.Infrastructure.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -24,6 +25,8 @@ public class AuthenticationService : IAuthenticationService
 
     private readonly IEmailService _emailService;
 
+    private readonly INotificationService _notificationService;
+
     private readonly IPasswordResetTokenRepository
     _passwordResetTokenRepository;
 
@@ -32,7 +35,7 @@ public class AuthenticationService : IAuthenticationService
       IConfiguration configuration,
       IRefreshTokenRepository refreshTokenRepository,
       IPasswordResetTokenRepository passwordResetTokenRepository,
-      IUnitOfWork unitOfWork, IEmailService emailService)
+      IUnitOfWork unitOfWork, IEmailService emailService, INotificationService notificationService)
     {
         _customerRepository = customerRepository;
 
@@ -45,6 +48,8 @@ public class AuthenticationService : IAuthenticationService
         _unitOfWork = unitOfWork;
 
         _emailService = emailService;
+
+        _notificationService = notificationService;
     }
 
     public async Task<LoginResponse> LoginAsync(LoginRequest request)
@@ -343,6 +348,10 @@ private string GenerateRefreshToken()
         }
 
         await _unitOfWork.SaveChangesAsync();
+
+        await _notificationService
+    .SendPasswordChangedNotificationAsync(
+        customer.Email);
 
         return new ResetPasswordResponse
         {

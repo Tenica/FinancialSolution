@@ -2,6 +2,7 @@ using FinancialSolution.Application.DTOs.Wallet;
 using FinancialSolution.Application.Interfaces.Repositories;
 using FinancialSolution.Application.Interfaces.Services;
 using FinancialSolution.Application.Interfaces.UnitOfWork;
+using FinancialSolution.Domain.Enums;
 
 namespace FinancialSolution.Application.Services;
 
@@ -13,10 +14,13 @@ public class WalletService : IWalletService
 
     private readonly IUnitOfWork _unitOfWork;
 
-    public WalletService(ICustomerRepository customerRepository, IWalletRepository walletRepository, IUnitOfWork unitOfWork)
+    private readonly IAuditService _auditService;
+
+    public WalletService(ICustomerRepository customerRepository, IWalletRepository walletRepository, IAuditService auditService ,IUnitOfWork unitOfWork)
     {
         _customerRepository = customerRepository;
         _walletRepository = walletRepository;
+        _auditService = auditService;
         _unitOfWork = unitOfWork;
     }
 
@@ -46,17 +50,21 @@ public class WalletService : IWalletService
         };
     }
 
-    public async Task FundWalletAsync(
-    FundWalletRequest request)
-    {
-        var wallet =
-            await _walletRepository
-                .GetByAccountNumberAsync(request.AccountNumber);
 
-        if (wallet == null)
+
+    public async Task FundWalletAsync(Guid adminId, FundWalletRequest request)
+    {
+        var admin = await _customerRepository.GetByIdAsync(adminId) ?? throw new Exception(
+              "Admin not found.");
+
+        if (admin.Role != UserRole.Admin)
         {
-            throw new Exception("Wallet not found.");
+            throw new Exception(
+                "Only administrators can fund wallets.");
         }
+
+            var wallet =await _walletRepository.GetByAccountNumberAsync(request.AccountNumber) ?? 
+            throw new Exception("Wallet not found.");
 
         if (request.Amount <= 0)
         {
@@ -66,6 +74,10 @@ public class WalletService : IWalletService
         wallet.Balance += request.Amount;
 
         await _walletRepository.UpdateAsync(wallet);
+
+        await _auditService.LogAsync(adminId,"Fund Wallet",
+    $"Funded {request.AccountNumber} with {request.Amount}",
+    null);
 
         await _unitOfWork.SaveChangesAsync();
     }

@@ -4,6 +4,7 @@ using FinancialSolution.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FinancialSolution.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260619112823_AddBeneficiaries")]
+    partial class AddBeneficiaries
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -378,17 +381,11 @@ namespace FinancialSolution.Infrastructure.Migrations
                     b.Property<Guid>("CustomerId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<int>("FailedAttemptCount")
-                        .HasColumnType("int");
-
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
                     b.Property<DateTime?>("LastExecutedAt")
                         .HasColumnType("datetime2");
-
-                    b.Property<string>("LastTransactionReference")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("NextExecutionDate")
                         .HasColumnType("datetime2");
@@ -449,47 +446,6 @@ namespace FinancialSolution.Infrastructure.Migrations
                     b.HasIndex("WalletId");
 
                     b.ToTable("Transactions", (string)null);
-                });
-
-            modelBuilder.Entity("FinancialSolution.Domain.Entities.TransactionReversalRequest", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<Guid>("CustomerId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Reason")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<DateTime?>("ReviewedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<Guid?>("ReviewedByAdminId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
-
-                    b.Property<string>("TransactionReference")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CustomerId");
-
-                    b.ToTable("TransactionReversalRequests");
                 });
 
             modelBuilder.Entity("FinancialSolution.Domain.Entities.Wallet", b =>
@@ -641,17 +597,6 @@ namespace FinancialSolution.Infrastructure.Migrations
                     b.Navigation("Wallet");
                 });
 
-            modelBuilder.Entity("FinancialSolution.Domain.Entities.TransactionReversalRequest", b =>
-                {
-                    b.HasOne("FinancialSolution.Domain.Entities.Customer", "Customer")
-                        .WithMany("ReversalRequests")
-                        .HasForeignKey("CustomerId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Customer");
-                });
-
             modelBuilder.Entity("FinancialSolution.Domain.Entities.Wallet", b =>
                 {
                     b.HasOne("FinancialSolution.Domain.Entities.Currency", "Currency")
@@ -682,8 +627,6 @@ namespace FinancialSolution.Infrastructure.Migrations
                     b.Navigation("Profile");
 
                     b.Navigation("RefreshTokens");
-
-                    b.Navigation("ReversalRequests");
 
                     b.Navigation("ScheduledTransfers");
 

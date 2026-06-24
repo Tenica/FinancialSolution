@@ -30,12 +30,20 @@ public class ApplicationDbContext : DbContext
 
     public DbSet<PasswordResetToken> PasswordResetTokens => Set<PasswordResetToken>();
 
+    public DbSet<ScheduledTransfer> ScheduledTransfers { get; set; }
+
+    public DbSet<Beneficiary> Beneficiaries { get; set; } = default!;
+
+    public DbSet<TransactionReversalRequest> TransactionReversalRequests { get; set; } = default!;
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
 
         //ETF automatically find your comfiguration everytime i run a db migration
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
+
+     
     }
 }
 

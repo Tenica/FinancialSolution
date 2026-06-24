@@ -110,7 +110,9 @@ builder.Services.AddScoped<IBeneficiaryRepository,BeneficiaryRepository>();
 
 builder.Services.AddScoped<INotificationService, NotificationService>();
 
+builder.Services.AddScoped<ITransactionReversalRepository,TransactionReversalRepository>();
 
+builder.Services.AddScoped<ITransactionReversalService, TransactionReversalService>();
 
 
 // 3. API Configuration

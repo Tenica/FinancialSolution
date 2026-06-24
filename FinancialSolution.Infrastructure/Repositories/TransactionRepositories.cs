@@ -2,8 +2,11 @@ using FinancialSolution.Application.Interfaces.Repositories;
 using FinancialSolution.Domain.Entities;
 using FinancialSolution.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Org.BouncyCastle.Asn1;
 
 namespace FinancialSolution.Infrastructure.Repositories;
+
+ 
 
 public class TransactionRepository : ITransactionRepository
 {
@@ -51,6 +54,14 @@ public class TransactionRepository : ITransactionRepository
     {
         return await _context.Transactions
             .CountAsync(x => x.WalletId == walletId);
+    }
+
+    public async Task<Transaction?>
+    GetByReferenceAsync(
+        string reference)
+    {
+        return await _context.Transactions.FirstOrDefaultAsync(
+                x => x.Reference == reference);
     }
 }
 

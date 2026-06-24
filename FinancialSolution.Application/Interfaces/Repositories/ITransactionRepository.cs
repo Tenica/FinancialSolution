@@ -18,4 +18,7 @@ public interface ITransactionRepository
 
     Task<int> GetTransactionCountAsync(
         Guid walletId);
+
+    Task<Transaction?>
+      GetByReferenceAsync(string reference);
 }
